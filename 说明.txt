@@ -1,0 +1,87 @@
+========================================
+西电超算 · GPU 切换助手（项目说明）
+当前版本：v1.22
+========================================
+
+【成品软件】
+  GPU切换助手.exe          双击运行（单文件，可直接发给别人，无需安装 Python）
+  GPU切换助手_v1.22.exe    带版本号的同名副本，方便区分新旧
+
+【代码 / 可改部分】
+  gpu_switch_app.py        软件源码（改完双击 build.bat 即可重新打包）
+  GPU切换助手.spec         打包配置（已改为相对路径，换机器也能打包）
+  build.bat                一键：自测 -> 打包 -> 复制成品
+  version_copy.py          打包收尾脚本（被 build.bat 调用）
+  icon_gen.py              图标生成脚本（重新生成 icon.png / icon.ico）
+  gpu_switch.sh            登录集群后用的交互式切换脚本（Linux）
+
+【自测 / 回归命令】（在项目目录下执行）
+  GPU切换助手.exe --selftest     逻辑自测，结果写 gpu_switch_selftest.txt
+  GPU切换助手.exe --guismoke     完整构建一次界面，2.2 秒后自动关闭
+  GPU切换助手.exe --smoke        基础 GUI 冒烟
+  GPU切换助手.exe --manualtest   打开使用手册窗口 2.5 秒后自动关闭
+
+【备份 / 回退】
+  backup\v1.21\              双栏界面 + 队列名修正前的版本（含 exe）
+  backup\v1.20_原版\         界面改成双栏之前的版本（含 exe，可直接用）
+  backup\v1.19\              更早一版
+  回退方法见各备份目录里的 回退说明.txt
+
+【v1.22 相对 v1.21 的变化】（只改数据与文字，界面和功能逻辑完全没动）
+  2026-09-28 用 test44 账号在集群上实测（jqueues / jhostgroup / jsub / jjobs），
+  修掉了两个会导致提交失败的队列名错误：
+  · fat01-fat06 的队列：cpu_x86_fat -> cpu_x86fat
+    （平台没有 cpu_x86_fat，原名字提交会报 Queue <cpu_x86_fat> is not found）
+  · cu06-cu13 的队列：cpu_x86 -> cpu_x86thin
+    （cpu_x86 只挂 cu01-cu05；cu06-cu13 属于 CPUgroup_X86_xeon8358P_512G / _256G，
+      平台实测挂在 cpu_x86thin 下）
+  · ARM 三组（cpu_arm1 / cpu_arm2 / cpu_armfat1）与 cu01-cu05（cpu_x86）已实测确认，
+    不再显示「队列未确认」的黄条提醒。
+  · 使用手册里补了一张 CPU 队列对照表；示例 module 名改成平台真实存在的
+    cuda/12.6.3 与 python/pytorch-2.5.1（原来写的 cuda/12.6、pytorch/2.5.1 加载会失败）。
+  · 自测里新增「队列名核对」一项，防止以后又改回错误的队列名。
+
+【实测记录】（v1.22 在 test44 账号上跑通）
+  · 单行指令：jsub -n 1 -gpgpu 1 -q gpu_6000ada -m gpu15 -J t44_probe -o output.%J -e error.%J "..."
+    -> 作业 78699 在 gpu15 上运行，Successfully completed，error 文件为空。
+  · 完整脚本（「复制提交版」base64 那段）：在集群解码后与本地生成的文件 md5 完全一致
+    （4bacdd16735e5e15d5c99f9528b49838），jsub < submit_gpu15.sh -> 作业 78700 跑通，
+    输出 GPU 0: NVIDIA RTX 6000 Ada Generation，torch 2.5.1 | CUDA 可用 True。
+  · cpu_x86fat 队列接受提交（作业 78701，已手动取消）。
+  · 【界面里写 Python 代码 → 一键生成 → 复制到集群】完整走了一遍：
+    在「运行内容」框里手敲一段 13 行的 torch 程序（含中文 print），类型选「自动识别」，
+    软件识别为 Python 模式；点「复制提交版（粘贴即提交）」，生成的脚本在集群解码后
+    与本地 md5 完全一致（1310 字节脚本，md5 1d35e2ecab9802e1b30dfc1dd6766e3a）。
+    jsub < submit_gpu15.sh -> 作业 78711 在 gpu15 跑通，output.78711：
+      主机: gpu15 | 作业号: 78711
+      torch 2.5.1 | device cuda | 结果均值 1.0398
+      显卡: NVIDIA RTX 6000 Ada Generation
+      耗时 2.92 秒
+    中文输出正常，error.78711 为空，作业报告 Successfully completed。
+  · 反向验证（故意让代码出错）：同样流程跑一段 1/0 的程序 -> 作业 78714，
+    output.78714 第 1 行仍是出错前的中文 print，error.78714 有完整 traceback
+    （ZeroDivisionError，指到 run_gpu15.py 第 2 行），作业报告 Exited with exit code 1。
+    说明用户代码写错时不会静默失败，报错位置和原因都能在 error.<作业号> 里看到。
+  · 测试账号 test44 的排队上限是 1 个 pending，测多个队列时会被
+    "The limit of pending job is reached" 挡住，这是账号配额不是软件问题。
+
+【历史版本：v1.21 相对 v1.20 的变化】
+  · 界面改为左右双栏：左边选节点/核数/环境，右边写运行内容 + 看生成结果，
+    两个代码框不再被挤成一两行。
+  · 按钮就近放在各自面板里；新增底部状态栏显示生成结果与队列待确认提醒。
+  · 字号按高分屏（150% 缩放）重新调校，窗口按内容自适应大小。
+  · 图标改为运行时相对路径查找（打包资源目录 → 程序目录 → 当前目录），
+    打包配置里的绝对盘符路径已去掉。
+  · 记住上次填写的内容（存在 用户目录\.gpu_switch_helper.json），点「重置」清空。
+  · 新增快捷键：Ctrl+Enter 生成、Ctrl+S 保存脚本、F1 使用手册。
+  · 修好：核数框里输入非数字后切换节点会报错卡住的问题（现在自动收回，
+    且 "8bc" 这类手滑仍保留已经打对的 8，不会被整个抹掉）。
+  · 修好：界面回调里出错时（无控制台 exe）异常被静默吞掉的问题，
+    现在会弹窗并写入 切换助手_错误.log。
+  · 功能逻辑（jsub 指令 / #JSUB 脚本 / base64 直接提交版）与上一版完全一致。
+
+【注意事项】
+  · H200 / PRO6000 队列平台确实存在，但可能没对你的账号开通；NPU 组（gpu29）
+    平台目前没有对应队列。提交前用 jqueues -u $USER 核对，软件会黄条提醒。
+  · Windows 生成的脚本上传集群后先 dos2unix 再提交（「复制提交版」已自动处理）。
+  · 提交：jsub < submit.sh ｜ 看作业：jjobs ｜ 取消：jctrl kill 作业号

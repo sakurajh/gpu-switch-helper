@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>西电高性能计算中心 — 超算使用指南</title>
+<style>
+:root{
+  --bg:#0f172a; --bg2:#111c33; --panel:#ffffff;
+  --ink:#0f172a; --muted:#64748b;
+  --brand:#2563eb; --brand2:#7c3aed; --accent:#06b6d4;
+  --grad:linear-gradient(135deg,#2563eb 0%,#7c3aed 60%,#06b6d4 100%);
+  --line:#e2e8f0; --code:#f1f5f9; --chip:#eff6ff;
+  --ok:#059669; --warn:#d97706; --err:#dc2626;
+  --shadow:0 10px 30px -12px rgba(2,6,23,.25);
+  --radius:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;scroll-padding-top:20px}
+body{font-family:"Segoe UI","Microsoft YaHei",-apple-system,sans-serif;color:var(--ink);background:#f8fafc;line-height:1.75}
+h1,h2,h3,h4{line-height:1.35;letter-spacing:.2px}
+
+/* ---------- Hero ---------- */
+.hero{background:var(--grad);color:#fff;padding:56px 24px 48px;position:relative;overflow:hidden}
+.hero::before{content:"";position:absolute;inset:0;background:radial-gradient(600px 300px at 80% -20%,rgba(255,255,255,.25),transparent)}
+.hero .wrap{max-width:1200px;margin:0 auto;position:relative;z-index:1}
+.hero .badge{display:inline-block;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);padding:4px 14px;border-radius:999px;font-size:13px;letter-spacing:1px;backdrop-filter:blur(4px)}
+.hero h1{font-size:clamp(26px,4vw,42px);font-weight:800;margin:14px 0 8px}
+.hero p.sub{font-size:16px;opacity:.92;max-width:760px}
+.hero .meta{margin-top:20px;display:flex;flex-wrap:wrap;gap:10px}
+.hero .meta span{background:rgba(0,0,0,.18);padding:6px 14px;border-radius:8px;font-size:13px;border:1px solid rgba(255,255,255,.15)}
+
+/* ---------- Layout ---------- */
+.layout{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:264px 1fr;gap:28px;padding:28px 20px 80px}
+@media(max-width:960px){.layout{grid-template-columns:1fr}.side{position:relative!important;max-height:none!important;overflow:visible!important;top:0!important}}
+
+/* ---------- Sidebar ---------- */
+.side{position:sticky;top:20px;align-self:start;max-height:calc(100vh - 40px);overflow:auto}
+.side .nav{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px}
+.side .nav-title{font-size:12px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;padding:6px 10px 10px;font-weight:700}
+.side a{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;color:#334155;text-decoration:none;font-size:14px;transition:.15s}
+.side a:hover{background:var(--chip);color:var(--brand)}
+.side a .dot{width:7px;height:7px;border-radius:50%;background:var(--line);flex:none}
+.side a.lv2{padding-left:28px;font-size:13px}
+.side a.active{background:var(--grad);color:#fff}
+.side a.active .dot{background:#fff}
+
+/* ---------- Main ---------- */
+main{min-width:0}
+section{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:26px 28px;margin-bottom:26px;scroll-margin-top:20px}
+.sec-head{display:flex;align-items:center;gap:14px;border-bottom:2px solid var(--line);padding-bottom:14px;margin-bottom:20px}
+.sec-num{width:38px;height:38px;flex:none;border-radius:10px;background:var(--grad);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:17px;box-shadow:0 4px 12px -4px rgba(37,99,235,.6)}
+.sec-head h2{font-size:22px;font-weight:800}
+h3{font-size:17px;margin:22px 0 10px;color:#1e293b;display:flex;align-items:center;gap:8px}
+h3::before{content:"";width:4px;height:18px;background:var(--grad);border-radius:2px}
+h4{font-size:15px;margin:16px 0 8px;color:#334155}
+p{margin:8px 0}
+a{color:var(--brand)}
+.hint{background:#f0f9ff;border-left:4px solid var(--accent);padding:10px 14px;border-radius:8px;margin:12px 0;font-size:14px}
+.warn{background:#fffbeb;border-left:4px solid var(--warn)}
+.danger{background:#fef2f2;border-left:4px solid var(--err)}
+.hint b{color:var(--ink)}
+
+/* ---------- Tables ---------- */
+.tbl-wrap{overflow-x:auto;margin:14px 0;border:1px solid var(--line);border-radius:10px}
+table{width:100%;border-collapse:collapse;font-size:14px;min-width:560px}
+th{background:#f1f5f9;color:#334155;text-align:left;padding:10px 14px;font-weight:700;white-space:nowrap;border-bottom:1px solid var(--line)}
+td{padding:9px 14px;border-bottom:1px solid #eef2f7;vertical-align:top}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#f8fafc}
+td code,th code{background:var(--code);padding:1px 6px;border-radius:5px;font-size:12.5px;color:#be185d;font-family:Consolas,"Courier New",monospace}
+
+/* ---------- Code blocks ---------- */
+.code-wrap{position:relative;margin:14px 0;border-radius:10px;overflow:hidden;box-shadow:var(--shadow)}
+.code-head{display:flex;justify-content:space-between;align-items:center;background:#1e293b;padding:6px 14px;font-size:12px;color:#94a3b8}
+.copy-btn{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#e2e8f0;padding:2px 12px;border-radius:6px;font-size:12px;cursor:pointer;transition:.15s}
+.copy-btn:hover{background:rgba(255,255,255,.22)}
+.copy-btn.ok{background:var(--ok);border-color:var(--ok)}
+pre{margin:0;background:#0b1220;color:#d7e2f0;padding:16px 18px;overflow-x:auto;font-family:Consolas,"Courier New",monospace;font-size:13px;line-height:1.7}
+pre code{background:none!important;color:inherit;padding:0}
+.k{color:#7dd3fc}.s{color:#86efac}.c{color:#64748b;font-style:italic}.v{color:#fbbf24}
+
+/* ---------- Cards / grids ---------- */
+.grid{display:grid;gap:14px;margin:16px 0}
+.grid.cmd{grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}
+.card{border:1px solid var(--line);border-radius:10px;padding:14px;background:#fff;transition:.15s}
+.card:hover{transform:translateY(-2px);box-shadow:var(--shadow);border-color:#c7d2fe}
+.card .cmd{font-weight:800;color:var(--brand);font-size:15px}
+.card .cmd code{background:var(--chip);color:var(--brand);padding:2px 8px;border-radius:6px}
+.card p{font-size:13px;color:var(--muted);margin-top:6px}
+
+/* status chips */
+.chip{display:inline-block;padding:2px 10px;border-radius:999px;font-size:12px;font-weight:700}
+.chip.ok{background:#ecfdf5;color:var(--ok)}.chip.full{background:#fef3c7;color:var(--warn)}
+.chip.admin{background:#fef2f2;color:var(--err)}.chip.unavail{background:#e2e8f0;color:#475569}
+.chip.b{background:#eff6ff;color:var(--brand)}
+
+.tag{display:inline-block;background:var(--chip);color:var(--brand);padding:1px 8px;border-radius:5px;font-size:12px;margin:2px;font-family:Consolas,monospace}
+
+footer{max-width:1200px;margin:0 auto;padding:0 20px 60px;color:var(--muted);font-size:13px;text-align:center}
+hr{border:none;border-top:1px solid var(--line);margin:18px 0}
+kbd{background:#1e293b;color:#e2e8f0;padding:2px 8px;border-radius:5px;font-family:Consolas,monospace;font-size:12.5px;border:1px solid #334155}
+
+/* print */
+@media print{.side{display:none}.layout{grid-template-columns:1fr}section{box-shadow:none;break-inside:avoid}}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="wrap">
+    <span class="badge">西安电子科技大学 · 专用超算中心</span>
+    <h1>高性能计算平台使用指南</h1>
+    <p class="sub">从登录门户、提交作业到部署大模型的一站式速查手册。调度系统：景行 JH Unischeduler V6.6。</p>
+    <div class="meta">
+      <span>🔗 门户：xqhpc.xidian.edu.cn</span>
+      <span>🗓 更新：2026</span>
+      <span>📚 读者：平台用户</span>
+    </div>
+  </div>
+</div>
+
+<div class="layout">
+  <aside class="side">
+    <div class="nav">
+      <div class="nav-title">目录导航</div>
+      <a href="#s1"><span class="dot"></span>平台概况与登录</a>
+      <a href="#s2"><span class="dot"></span>HPC 应用门户</a>
+      <a href="#s3"><span class="dot"></span>调度命令速查</a>
+      <a href="#s4"><span class="dot"></span>提交作业（核心）</a>
+      <a href="#s5"><span class="dot"></span>环境配置与安装</a>
+      <a href="#s6"><span class="dot"></span>常用软件（module）</a>
+      <a href="#s7"><span class="dot"></span>conda / pip</a>
+      <a href="#s8"><span class="dot"></span>提交作业示例</a>
+      <a href="#s9"><span class="dot"></span>MPI 并行作业</a>
+      <a href="#s10"><span class="dot"></span>大模型（LLM）使用</a>
+      <a href="#s11"><span class="dot"></span>常见问题 FAQ</a>
+    </div>
+  </aside>
+
+  <main>
+
+    <!-- ============ 1 ============ -->
+    <section id="s1">
+      <div class="sec-head"><div class="sec-num">1</div><h2>平台概况与登录</h2></div>
+
+      <h3>统一身份认证登录</h3>
+      <p>通过 <b>SSO 统一身份认证</b> 自动登入 HPC 应用门户（网页桌面）。<span class="tag">首次登录需平台审核</span></p>
+      <div class="code-wrap">
+        <div class="code-head"><span>登录入口</span><button class="copy-btn">复制</button></div>
+        <pre><code><span class="s"># 标准入口（统一身份认证）</span>
+https://xqhpc.xidian.edu.cn
+
+<span class="s"># 跳过认证入口（教学/测试用户等特殊场景）</span>
+https://xqhpc.xidian.edu.cn/appform/login?code=true&amp;locale=zh_CN</code></pre>
+      </div>
+
+      <h3>SSH 登录</h3>
+      <p>进入门户 → <b>应用仓库</b> → 获取 <kbd>SSH 密钥</kbd>，即可用 Xshell 等工具登录；或直接打开 <b>terminal</b> 应用连接登录节点。</p>
+
+      <h3>集群内置常用软件</h3>
+      <div class="tbl-wrap"><table>
+        <tr><th>领域</th><th>软件</th><th>版本</th></tr>
+        <tr><td>分子动力学</td><td>autodock / gromacs / lammps / namd / deepmd</td><td>1.6·4.2.6 / 2024.1 / 20230802 / 3.0.1 / 3.0</td></tr>
+        <tr><td>气象模拟</td><td>wrf</td><td>4.7.1</td></tr>
+        <tr><td>人工智能</td><td>cuda / cudnn / nccl / pytorch / TensorFlow</td><td>11.8~13.2.1 / 9.6.074 / 2.x / 2.5.1 / 2.13</td></tr>
+        <tr><td>并行计算</td><td>intelmpi / openmpi / mvapich / mpich</td><td>2021.6·2021.14 / 4.1.1·4.1.7 / 2.3 / 4.3.0</td></tr>
+        <tr><td>数学库</td><td>openblas / fftw / lapack</td><td>0.3.26 / 3.3.10 / 3.10.1</td></tr>
+        <tr><td>量子化学</td><td>orca / nwchem</td><td>5.0.1·6.0.1 / 7.2.3</td></tr>
+        <tr><td>生物信息</td><td>ncbi-blast</td><td>2.13</td></tr>
+        <tr><td>编译工具</td><td>gcc / cmake / golang / R / perl</td><td>6.5~13.2 / 3.27.9 / 1.24.4 / 4.4 / 5.38</td></tr>
+        <tr><td>其他</td><td>uspex / gnuplot / singularity / netcdf</td><td>10.5 / 6.0.0 / 1.4.1 / 4.9.2</td></tr>
+      </table></div>
+    </section>
+
+    <!-- ============ 2 ============ -->
+    <section id="s2">
+      <div class="sec-head"><div class="sec-num">2</div><h2>HPC 应用门户（网页端功能）</h2></div>
+
+      <div class="grid cmd">
+        <div class="card"><div class="cmd">应用仓库</div><p>查看/启用/停用已上线应用。常用：SSH密钥、terminal</p></div>
+        <div class="card"><div class="cmd">我的数据</div><p>网页上传/下载文件，可装传输客户端，下载使用手册</p></div>
+        <div class="card"><div class="cmd">我的作业 / 会话</div><p>查看作业与会话信息</p></div>
+        <div class="card"><div class="cmd">集群状态</div><p>查看集群节点信息</p></div>
+        <div class="card"><div class="cmd">我的镜像</div><p>导入 / 构建自己的镜像仓库</p></div>
+        <div class="card"><div class="cmd">开发环境</div><p>JupyterLab / VSCode / RStudio / 桌面 / Web终端</p></div>
+        <div class="card"><div class="cmd">服务管理</div><p>部署大模型服务（见第 10 节）</p></div>
+      </div>
+
+      <h3>镜像管理</h3>
+      <div class="grid" style="grid-template-columns:1fr 1fr">
+        <div class="card"><b>导入镜像</b><p>镜像文件先上传到「我的数据」（支持 .tar.gz/.tar），填写名称/Tag（默认 latest）/标签，提交导入作业。</p></div>
+        <div class="card"><b>构建镜像</b><p>选 Dockerfile 构建。<span class="tag">注意</span>构建需访问外网，建议在外网环境构建完成后导入平台使用。</p></div>
+      </div>
+
+      <h3>开发环境（容器）</h3>
+      <div class="hint warn"><b>⚠ 重要：</b>开发环境运行在容器中，停止/修改后会重新启动容器，<b>容器内配置会丢失</b>。如需保存修改，请<b>保存镜像</b>，下次用保存的镜像启动。</div>
+      <div class="tbl-wrap"><table>
+        <tr><th>类型</th><th>说明</th></tr>
+        <tr><td>JupyterLab</td><td>Web 版 Python 开发环境，内置 PyTorch、TensorFlow</td></tr>
+        <tr><td>VSCode</td><td>网页版 VSCode，内置 PyTorch、TensorFlow 与 Python 插件</td></tr>
+        <tr><td>RStudio</td><td>R 语言集成开发环境（IDE）</td></tr>
+        <tr><td>桌面</td><td>Linux 图形桌面（Ubuntu/CentOS），运行图形交互应用</td></tr>
+        <tr><td>Web 终端</td><td>仅 Web 终端，镜像需装 bash、sh 等 shell 工具</td></tr>
+      </table></div>
+      <p><b>启动参数：</b>环境名称（必填）、类型、镜像（按标签过滤）、资源规格、自定义端口、共享内存(shm-size)、挂载目录（默认挂家目录/工作目录）、SSH 连接（默认关，开启后需镜像预装 openssh-server 并启用 <code>PermitRootLogin yes</code>）。</p>
+    </section>
+
+    <!-- ============ 3 ============ -->
+    <section id="s3">
+      <div class="sec-head"><div class="sec-num">3</div><h2>调度系统命令速查</h2></div>
+      <div class="hint"><b>调度系统：</b>景行 JH Unischeduler <b>V6.6</b>。以下命令在集群<b>登录节点</b>上直接使用。</div>
+
+      <div class="grid cmd">
+        <div class="card"><div class="cmd">jhosts</div><p>查看节点信息（状态、核心等）</p></div>
+        <div class="card"><div class="cmd">jqueues</div><p>查看队列信息（状态、作业、核心）</p></div>
+        <div class="card"><div class="cmd">jsub</div><p>提交作业</p></div>
+        <div class="card"><div class="cmd">jjobs</div><p>查看当前作业</p></div>
+        <div class="card"><div class="cmd">jhist</div><p>查看历史作业（已完成/退出48h）</p></div>
+        <div class="card"><div class="cmd">jctrl</div><p>控制作业（取消/置顶/挂起/恢复）</p></div>
+        <div class="card"><div class="cmd">jmod</div><p>修改已提交作业参数</p></div>
+        <div class="card"><div class="cmd">jlimits</div><p>查询用户资源配额限制</p></div>
+        <div class="card"><div class="cmd">jhostgroup</div><p>查看节点组</p></div>
+        <div class="card"><div class="cmd">jdepinfo</div><p>查看作业依赖关系</p></div>
+        <div class="card"><div class="cmd">jversion</div><p>调度系统版本</p></div>
+      </div>
+
+      <h3>jhosts — 查看节点</h3>
+      <div class="code-wrap"><div class="code-head"><span>节点信息</span><button class="copy-btn">复制</button></div>
+      <pre><code>jhosts                  <span class="c"># 所有节点</span>
+jhosts -l 节点名         <span class="c"># 节点详情（含 NUMA/GPU 拓扑）</span>
+jhosts stat             <span class="c"># 节点负载</span>
+jhosts attrib -l 节点名  <span class="c"># 静态硬件资源（架构/核数/内存/GPU）</span></code></pre></div>
+      <div class="tbl-wrap"><table>
+        <tr><th>字段</th><th>含义</th><th style="width:200px">节点状态</th><th>含义</th></tr>
+        <tr><td><code>HOST_NAME</code></td><td>节点名称</td><td><span class="chip ok">ok</span></td><td>空闲</td></tr>
+        <tr><td><code>STATUS</code></td><td>节点状态</td><td><span class="chip full">closed_full</span></td><td>占满</td></tr>
+        <tr><td><code>MAX</code></td><td>最大 CPU 核心数</td><td><span class="chip admin">closed_admin</span></td><td>下线</td></tr>
+        <tr><td><code>NJOBS / RUN</code></td><td>作业使用 / 运行核心数</td><td><span class="chip unavail">unavail</span></td><td>宕机</td></tr>
+      </table></div>
+
+      <h3>jqueues — 查看队列</h3>
+      <div class="code-wrap"><div class="code-head"><span>队列</span><button class="copy-btn">复制</button></div>
+      <pre><code>jqueues                <span class="c"># 所有队列</span>
+jqueues -u 账户名       <span class="c"># 列出当前用户可用队列（提交前确认有权限）</span></code></pre></div>
+      <div class="tbl-wrap"><table>
+        <tr><th>资源类型</th><th>队列名</th></tr>
+        <tr><td>GPU 资源队列</td><td><span class="tag">gpu_4090</span><span class="tag">gpu_a800</span><span class="tag">gpu_h800</span><span class="tag">gpu_6000ada</span></td></tr>
+        <tr><td>x86 架构 CPU 队列</td><td><span class="tag">cpu_x86</span><span class="tag">cpu_x86fat</span><span class="tag">cpu_x86thin</span></td></tr>
+        <tr><td>arm 架构 CPU 队列</td><td><span class="tag">cpu_arm1</span><span class="tag">cpu_arm2</span><span class="tag">cpu_armfat1</span></td></tr>
+      </table></div>
+      <div class="hint warn"><b>注意：</b>其他为内置队列，使用场景特殊，<b>请勿将作业提交到其他队列</b>。</div>
+
+      <h3>jlimits — 查看配额</h3>
+      <p>集群有空闲资源但作业仍排队时，<b>优先用 <code>jlimits</code> 确认配额</b>，配额满则排队。</p>
+      <div class="code-wrap"><div class="code-head"><span>配额</span><button class="copy-btn">复制</button></div>
+      <pre><code>jlimits -n   <span class="c"># 当前可用资源限制</span></code></pre></div>
+    </section>
+
+    <!-- ============ 4 ============ -->
+    <section id="s4">
+      <div class="sec-head"><div class="sec-num">4</div><h2>提交作业（核心）</h2></div>
+      <div class="hint danger"><b>⚠ 语法注意：</b>调度系统使用 <code>#JSUB</code> 指令，<b>严禁使用 SLURM / SGE / PBS 语法</b>。</div>
+
+      <h3>方式一：命令行提交</h3>
+      <div class="code-wrap"><div class="code-head"><span>命令格式</span><button class="copy-btn">复制</button></div>
+      <pre><code>jsub -n &lt;CPU核数&gt; -gpgpu &lt;GPU数量&gt; -q &lt;队列名&gt; -J &lt;作业名&gt; -o &lt;输出&gt; -e &lt;错误&gt; ./commandline</code></pre></div>
+      <div class="tbl-wrap"><table>
+        <tr><th>参数</th><th>含义</th></tr>
+        <tr><td><code>-n &lt;CPU数&gt;</code></td><td>申请 CPU 核数，不能超过队列限制</td></tr>
+        <tr><td><code>-gpgpu &lt;GPU数&gt;</code></td><td>申请的 GPU 数量</td></tr>
+        <tr><td><code>-q &lt;队列名&gt;</code></td><td>指定队列，资源不足时排队、满足时派发；用 <code>jqueues -u &lt;账户&gt;</code> 确认权限</td></tr>
+        <tr><td><code>-J &lt;作业名&gt;</code></td><td>作业名，方便辨识</td></tr>
+        <tr><td><code>-o &lt;输出&gt;</code></td><td>调度系统输出；<code>%J</code> 表示作业号，如 <code>-o output.%J</code></td></tr>
+        <tr><td><code>-e &lt;错误&gt;</code></td><td>可执行文件运行时的错误输出</td></tr>
+      </table></div>
+      <p><b>示例</b>（10 核 + cpu_x86 队列 + python 打印 hello world）：</p>
+      <div class="code-wrap"><div class="code-head"><span>示例</span><button class="copy-btn">复制</button></div>
+      <pre><code>jsub -n 10 -q cpu_x86 -J test -o test.log <span class="s">"python3 helloworld.py"</span></code></pre></div>
+
+      <h3>方式二：脚本提交（推荐）</h3>
+      <div class="code-wrap"><div class="code-head"><span>submit.sh — 标准格式</span><button class="copy-btn">复制</button></div>
+      <pre><code><span class="c">#!/bin/bash</span>
+<span class="k">#JSUB</span> -q gpu_4090     <span class="c"># 队列</span>
+<span class="k">#JSUB</span> -gpgpu 1        <span class="c"># GPU 卡数</span>
+<span class="k">#JSUB</span> -n 8            <span class="c"># CPU 核心数</span>
+<span class="k">#JSUB</span> -e error.%J     <span class="c"># 错误日志（%J=作业号）</span>
+<span class="k">#JSUB</span> -o output.%J    <span class="c"># 状态日志</span>
+<span class="k">#JSUB</span> -W 48:00        <span class="c"># 运行时间限制</span>
+<span class="k">#JSUB</span> -J my_job       <span class="c"># 作业名称</span>
+
+module purge
+module load APP_MODULE_FILE
+mpirun APP_EXEC [-i input.file] [-o output.file] [...]</code></pre></div>
+      <div class="code-wrap"><div class="code-head"><span>提交脚本</span><button class="copy-btn">复制</button></div>
+      <pre><code>jsub &lt; submit.sh    <span class="c"># 标准输入方式</span>
+jsub ./submit.sh    <span class="c"># 直接传脚本文件</span></code></pre></div>
+
+      <h3>脚本编写检查清单</h3>
+      <ol style="margin-left:20px;font-size:14px">
+        <li>是否查阅了对应作业类型的文档？（串行/GPU/MPI 见参考文档，勿凭经验假设参数）</li>
+        <li>队列名是否用 <code>jqueues</code> 确认存在？<b>（没有 "default" 队列）</b></li>
+        <li><code>module load</code> 前是否加了 <code>module purge</code>？</li>
+        <li>是否在 <code>-R</code> 中指定 <code>select[type==LINUX64]</code>？</li>
+        <li>MPI 作业是否从 <code>JH_HOSTS</code> 生成 hostfile 并计算 NP？</li>
+        <li>是否用 <code>{ ... } &gt; logfile 2&gt;&amp;1</code> 显式重定向输出？</li>
+        <li>脚本是否 <code>chmod +x</code>？</li>
+      </ol>
+      <div class="hint warn"><b>注意：</b>① Windows 编写的脚本需转码：<code>dos2unix &lt;脚本名&gt;</code>；② 确保脚本有执行权限 <code>chmod +x</code>。</div>
+
+      <h3>jsub 选项速查（对照 SLURM）</h3>
+      <div class="tbl-wrap"><table>
+        <tr><th>JSUB 选项</th><th>说明</th><th>SLURM 对应</th></tr>
+        <tr><td><code>-J name</code></td><td>作业名</td><td>--job-name</td></tr>
+        <tr><td><code>-n N</code></td><td>总处理器数</td><td>--ntasks</td></tr>
+        <tr><td><code>-R "select[...] span[...]"</code></td><td>资源需求</td><td>--constraint</td></tr>
+        <tr><td><code>-q queue</code></td><td>队列</td><td>--partition</td></tr>
+        <tr><td><code>-m node</code></td><td>指定节点/节点组</td><td>--nodelist</td></tr>
+        <tr><td><code>-o / -e file</code></td><td>输出 / 错误文件</td><td>--output / --error</td></tr>
+        <tr><td><code>-W minutes</code></td><td>运行时限</td><td>--time</td></tr>
+        <tr><td><code>-M MB</code></td><td>内存限制</td><td>--mem</td></tr>
+        <tr><td><code>-gpgpu N</code></td><td>GPU 数</td><td>--gres=gpu:N</td></tr>
+        <tr><td><code>-x / -ux</code></td><td>独占 / 用户独占节点</td><td>—</td></tr>
+        <tr><td><code>-Is / -IX / -I</code></td><td>交互式（服务/X11/普通）</td><td>--interactive</td></tr>
+        <tr><td><code>-w 'status(job)...'</code></td><td>作业依赖（V6.4+）</td><td>--dependency</td></tr>
+      </table></div>
+      <div class="hint"><b>提示：</b>命令行选项会<b>覆盖</b>脚本中指定的选项。</div>
+
+      <h3>-R 资源需求详解</h3>
+      <div class="tbl-wrap"><table>
+        <tr><th>关键字</th><th>作用</th><th>示例</th></tr>
+        <tr><td><code>select</code></td><td>节点选择条件</td><td><code>select[mem&gt;1024]</code> · <code>select[type==LINUX64]</code></td></tr>
+        <tr><td><code>rusage</code></td><td>资源预留</td><td><code>rusage[mem=500]</code> · <code>rusage[mem=800/slot]</code></td></tr>
+        <tr><td><code>span</code></td><td>分布控制</td><td><code>span[hosts=1]</code>（单节点）· <code>span[ptile=2]</code></td></tr>
+      </table></div>
+      <p><b>rusage 预留方式：</b></p>
+      <div class="tbl-wrap"><table>
+        <tr><th>写法</th><th>含义</th></tr>
+        <tr><td><code>mem=800</code></td><td>默认按 slot 预留（等同 <code>mem=800/slot</code>）</td></tr>
+        <tr><td><code>mem=800/slot</code></td><td>预留值 × 节点分配的 slot 数</td></tr>
+        <tr><td><code>mem=800/host</code></td><td>每节点固定预留，不乘 slot 数</td></tr>
+      </table></div>
+      <div class="code-wrap"><div class="code-head"><span>组合示例</span><button class="copy-btn">复制</button></div>
+      <pre><code><span class="s"># 选 LINUX64 节点 + 预留 500MB + 单节点</span>
+jsub -n 4 -R <span class="s">"select[type==LINUX64] rusage[mem=500] span[hosts=1]"</span> my_job
+
+<span class="s"># 内存充足节点 + 每节点 2 slots</span>
+jsub -n 8 -R <span class="s">"select[mem>1024] rusage[mem=800] span[ptile=2]"</span> my_job</code></pre></div>
+
+      <h3>数组作业 &amp; 交互式作业</h3>
+      <div class="code-wrap"><div class="code-head"><span>数组 / 交互</span><button class="copy-btn">复制</button></div>
+      <pre><code><span class="s"># 数组作业</span>
+jsub -J job[1-20] -i input%J_%I -o output%J_%I.log myjob
+jjobs -A                     <span class="c"># 数组作业统计</span>
+jctrl stop 6[15-20]          <span class="c"># 挂起指定范围子作业</span>
+
+<span class="s"># 交互式作业</span>
+jsub -Is bash                <span class="c"># 服务模式（关闭提交端后后台运行）</span>
+jattach 13                   <span class="c"># 重新连接作业 13</span></code></pre></div>
+
+      <h3>作业查询与状态</h3>
+      <div class="code-wrap"><div class="code-head"><span>查询</span><button class="copy-btn">复制</button></div>
+      <pre><code>jjobs              <span class="c"># 当前用户作业</span>
+jjobs -l 作业ID     <span class="c"># 作业详细信息</span>
+jjobs -r/-p/-d/-s   <span class="c"># 运行/等待/已结束/挂起</span>
+jjobs -u user1 -q queue -m host   <span class="c"># 按用户/队列/节点过滤</span></code></pre></div>
+      <div class="tbl-wrap"><table>
+        <tr><th>状态</th><th>含义</th></tr>
+        <tr><td><span class="chip b">PEND</span></td><td>等待（排队）</td></tr>
+        <tr><td><span class="chip b">RUN</span></td><td>运行</td></tr>
+        <tr><td><span class="chip full">PSUSP / USUSP / SSUSP</span></td><td>等待中 / 用户 / 系统挂起</td></tr>
+        <tr><td><span class="chip ok">DONE</span></td><td>正常结束</td></tr>
+        <tr><td><span class="chip admin">EXIT</span></td><td>异常退出</td></tr>
+      </table></div>
+
+      <h3>作业控制</h3>
+      <div class="code-wrap"><div class="code-head"><span>控制</span><button class="copy-btn">复制</button></div>
+      <pre><code>jctrl kill 作业ID       <span class="c"># 终止</span>
+jctrl kill -f 作业ID    <span class="c"># 强制终止</span>
+jctrl resume 作业ID     <span class="c"># 恢复（PSUSP/USUSP）</span>
+jctrl stop 作业ID       <span class="c"># 挂起</span>
+jctrl top / bot 作业ID  <span class="c"># 置顶 / 置底</span>
+jctrl peek 作业ID       <span class="c"># 查看输出（-f 实时）</span>
+jctrl requeue 作业ID    <span class="c"># 重排队</span>
+jmod -W 60 -n 4 作业ID  <span class="c"># 修改已提交作业参数</span></code></pre></div>
+
+      <h3>内置环境变量（脚本中直接使用）</h3>
+      <div class="tbl-wrap"><table>
+        <tr><th>变量</th><th>说明</th></tr>
+        <tr><td><code>JH_JOBID</code></td><td>作业号</td></tr>
+        <tr><td><code>JH_HOSTS</code></td><td>执行节点列表（MPI hostfile 来源）</td></tr>
+        <tr><td><code>JH_QUEUE / JH_JOBNAME</code></td><td>队列 / 作业名</td></tr>
+        <tr><td><code>JH_SUB_HOST / JH_SUB_CWD</code></td><td>提交节点 / 提交时工作路径</td></tr>
+        <tr><td><code>JH_ARRAY_JOBINDEX / JH_ARRAY_JOBID</code></td><td>数组作业索引 / 数组 ID</td></tr>
+        <tr><td><code>JH_CPU_RANK / JH_GPU_RANK</code></td><td>CPU/GPU 绑定信息（V6.4+）</td></tr>
+        <tr><td><code>JH_JOB_PORTS</code></td><td>端口资源（V6.4+）</td></tr>
+        <tr><td><code>JH_GPU_MEM / JH_JOB_OUTFILE</code></td><td>GPU 内存 / 输出文件路径</td></tr>
+      </table></div>
+    </section>
+
+    <!-- ============ 5 ============ -->
+    <section id="s5">
+      <div class="sec-head"><div class="sec-num">5</div><h2>环境配置与应用安装</h2></div>
+
+      <h3>module — 软件环境管理</h3>
+      <p>动态切换软件版本、配置环境变量，解决多版本共存冲突。核心作用：版本管理、环境隔离、简化操作。</p>
+      <div class="code-wrap"><div class="code-head"><span>基本用法</span><button class="copy-btn">复制</button></div>
+      <pre><code>module purge ; module load modulefile</code></pre></div>
+      <div class="tbl-wrap"><table>
+        <tr><th>命令</th><th>功能</th></tr>
+        <tr><td><code>module avail</code></td><td>查询所有可用软件环境</td></tr>
+        <tr><td><code>module load 软件名</code></td><td>加载软件环境</td></tr>
+        <tr><td><code>module unload 软件名</code></td><td>卸载软件环境</td></tr>
+        <tr><td><code>module purge</code></td><td>卸载所有环境</td></tr>
+        <tr><td><code>module list</code></td><td>查看已加载环境列表</td></tr>
+        <tr><td><code>module switch A B</code></td><td>从 A 切换到 B</td></tr>
+      </table></div>
+      <div class="hint"><b>建议：</b>将 <code>module load</code> 写入作业脚本；用 <code>purge</code> 清理避免冲突。</div>
+
+      <h3>开放外部源站（登录节点）</h3>
+      <div class="tbl-wrap"><table>
+        <tr><th>源站</th><th>地址</th></tr>
+        <tr><td>中科大开源镜像站</td><td>https://mirrors.ustc.edu.cn</td></tr>
+        <tr><td>清华大学开源镜像站</td><td>https://mirrors.tuna.tsinghua.edu.cn</td></tr>
+        <tr><td>南京大学开源镜像站</td><td>https://mirror.nju.edu.cn</td></tr>
+        <tr><td>华为云开源镜像站</td><td>https://mirrors.huaweicloud.com</td></tr>
+        <tr><td>昇腾镜像仓库</td><td>https://www.hiascend.com/developer/ascendhub</td></tr>
+        <tr><td>阿里魔搭社区</td><td>https://www.modelscope.cn</td></tr>
+      </table></div>
+    </section>
+
+    <!-- ============ 6 ============ -->
+    <section id="s6">
+      <div class="sec-head"><div class="sec-num">6</div><h2>常用软件（module）</h2></div>
+      <div class="code-wrap"><div class="code-head"><span>加载示例</span><button class="copy-btn">复制</button></div>
+      <pre><code><span class="s"># 查看可用环境</span>
+module avail
+
+<span class="s"># 加载 / 卸载 intel 编译器</span>
+module load intelmpi/2021.11
+module unload intelmpi
+
+<span class="s"># 清理全部环境</span>
+module purge</code></pre></div>
+      <p>完整软件版本见第 1.3 节表格。<span class="tag">注意</span>具体模块名以 <code>module avail</code> 输出为准。</p>
+    </section>
+
+    <!-- ============ 7 ============ -->
+    <section id="s7">
+      <div class="sec-head"><div class="sec-num">7</div><h2>conda / pip 使用</h2></div>
+
+      <h3>conda 配置与使用</h3>
+      <div class="code-wrap"><div class="code-head"><span>conda</span><button class="copy-btn">复制</button></div>
+      <pre><code><span class="s"># 1. 复制配置文件到家目录（已复制则忽略）</span>
+cp /public/apps/env/.condarc ~/
+
+<span class="s"># 2. 创建环境</span>
+condaenv create -n py3.13 python=3.13 -y
+
+<span class="s"># 3. 激活环境</span>
+source activate py3.13
+
+<span class="s"># 4. 移除环境</span>
+conda deactivate</code></pre></div>
+
+      <h3>pip 安装包</h3>
+      <div class="code-wrap"><div class="code-head"><span>pip</span><button class="copy-btn">复制</button></div>
+      <pre><code>source activate py3.13
+pip install numpy -i http://10.10.50.103/pypi/web/simple --trusted-host 10.10.50.103</code></pre></div>
+
+      <h3>conda 环境迁移（从 PC/云）</h3>
+      <ol style="margin-left:20px;font-size:14px">
+        <li>连接需迁移的 conda 环境</li>
+        <li>安装 conda-pack：<code>conda install conda-pack</code></li>
+        <li>打包：<code>conda pack -n &lt;环境名&gt; -o &lt;文件名&gt;.tar.gz</code></li>
+        <li>上传打包文件到平台家目录</li>
+        <li>在 <code>anaconda3/envs</code> 下创建同名目录</li>
+        <li>解压到该目录</li>
+        <li>加载环境验证迁移完成</li>
+      </ol>
+    </section>
+
+    <!-- ============ 8 ============ -->
+    <section id="s8">
+      <div class="sec-head"><div class="sec-num">8</div><h2>提交作业示例</h2></div>
+      <div class="hint">平台公共示例目录：<code>/public/apps/example</code>（pytorch、lammps 等）。</div>
+
+      <h3>GPU 队列提交（pytorch，gpu_4090）</h3>
+      <div class="code-wrap"><div class="code-head"><span>pytorch + GPU</span><button class="copy-btn">复制</button></div>
+      <pre><code><span class="s"># 1. 创建目录并复制示例</span>
+mkdir pytorchtest
+cp -r /public/apps/example/pytorch/* pytorchtest/
+cd pytorchtest
+
+<span class="s"># 2. 提交作业</span>
+jsub &lt; submit.sh
+
+<span class="s"># 3. 查看状态与日志</span>
+jjobs
+tail -f output.7128      <span class="c"># 动态查看训练日志</span></code></pre></div>
+
+      <h3>CPU 队列提交（lammps，cpu_x86 / cpu_armfat1）</h3>
+      <div class="code-wrap"><div class="code-head"><span>lammps</span><button class="copy-btn">复制</button></div>
+      <pre><code>mkdir lammpsTestX86
+cp -r /public/apps/example/lammps/* lammpsTestX86/
+cd lammpsTestX86
+<span class="c"># 修改 submit.sh 为 cpu_x86（或 cpu_armfat1）队列资源配置</span>
+jsub &lt; submit.sh
+jjobs
+tail -f out_9702.log     <span class="c"># 动态查看计算日志</span></code></pre></div>
+
+      <h3>Singularity 容器作业（python）</h3>
+      <div class="code-wrap"><div class="code-head"><span>Singularity</span><button class="copy-btn">复制</button></div>
+      <pre><code><span class="s"># 镜像 .sif 已上传，例：/public/apps/mirrors/singularity/pytorch-2.3.0-cuda12.4.sif</span>
+mkdir python
+cp -r /public/apps/example/pytorch/* python/
+cd python
+
+<span class="s"># submit-singularity.sh 核心命令：</span>
+<span class="c">#   singularity exec --nv 镜像路径 python mnist_torch.py</span>
+<span class="c">#   --nv  = 启用 NVIDIA GPU 支持</span>
+jsub &lt; submit-singularity.sh
+jjobs
+tail -f output.43158</code></pre></div>
+
+      <h3>DCU 国产卡提交（海光 gpu_k100ai，pytorch）</h3>
+      <p>国产加速卡（DCU，兼容 ROCm/HIP），需到光合社区 <code>https://developer.sourcefind.cn/</code> 下载 <b>DTK</b> 及配套 torch/torchvision whl 包。</p>
+      <div class="code-wrap"><div class="code-head"><span>环境准备</span><button class="copy-btn">复制</button></div>
+      <pre><code><span class="s"># 推荐下载：DTK-26.04-Rocky9.2-x86_64 + 配套 torch/torchvision whl</span>
+
+<span class="s"># 1. 创建虚拟环境（python 3.12）</span>
+conda create -n k100ai python=3.12 --override-channels \
+  -c https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main \
+  -c https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/free \
+  -c https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+
+<span class="s"># 2. 离线安装 whl 包</span>
+pip install torch-2.9.0+das.opt1.dtk2604-...whl
+pip install torchvision-0.24.0+das.opt1.dtk2604.torch290-...whl
+
+<span class="s"># 3. 剩余依赖（numpy 版本必须 &lt; 2）</span>
+pip install tensorboard
+pip install numpy==1.26.4</code></pre></div>
+      <div class="code-wrap"><div class="code-head"><span>submit.sh 示例</span><button class="copy-btn">复制</button></div>
+      <pre><code><span class="c">#!/bin/bash</span>
+<span class="k">#JSUB</span> -J myTrainTest123
+<span class="k">#JSUB</span> -q gpu_k100ai
+<span class="k">#JSUB</span> -gpgpu 1
+<span class="k">#JSUB</span> -n 8
+<span class="k">#JSUB</span> -o ./logs/output.%J
+<span class="k">#JSUB</span> -e ./logs/error.%J
+
+<span class="c"># 加载 DTK 环境（路径按实际）</span>
+source /public/home/lizhixian/k100ai/DTK-26.04-Rocky9.2-x86_64/dtk-26.04/env.sh
+<span class="c"># 激活虚拟环境</span>
+source /public/home/lizhixian/miniconda3/bin/activate k100ai
+cd <span class="s">"/public/home/lizhixian/k100ai/pytorch"</span>
+python mnist_torch.py</code></pre></div>
+
+      <h3>多卡 GPU 作业（4 × H800 示例）</h3>
+      <div class="hint"><b>选型说明：</b>平台 GPU 队列为 <span class="tag">gpu_4090</span><span class="tag">gpu_a800</span><span class="tag">gpu_h800</span><span class="tag">gpu_6000ada</span>，<b>没有 H100 队列</b>。H800 是 H100 的国内版（同为 Hopper 架构），大模型训练请选 <code>gpu_h800</code> 队列。</div>
+      <div class="code-wrap"><div class="code-head"><span>submit_gpu4.sh — 单机 4 卡 DDP</span><button class="copy-btn">复制</button></div>
+      <pre><code><span class="c">#!/bin/bash</span>
+<span class="k">#JSUB</span> -J multi_gpu_train
+<span class="k">#JSUB</span> -q gpu_h800      <span class="c"># H800 队列</span>
+<span class="k">#JSUB</span> -gpgpu 4         <span class="c"># 申请 4 张卡</span>
+<span class="k">#JSUB</span> -n 32            <span class="c"># 配套 CPU 核数</span>
+<span class="k">#JSUB</span> -e error.%J
+<span class="k">#JSUB</span> -o output.%J
+
+source activate myenv
+torchrun --nproc_per_node=4 train.py   <span class="c"># PyTorch DDP 单机 4 卡</span></code></pre></div>
+      <p><b>进阶：</b><code>-gpgpu</code> 支持按型号/显存/MIG 精细申请，语法 <code>-gpgpu "num [type=...] [vendor=...] [gmem=...] [sm=num] [mig=gsize]"</code>：</p>
+      <div class="code-wrap"><div class="code-head"><span>精细申请示例</span><button class="copy-btn">复制</button></div>
+      <pre><code><span class="s"># 4 张卡，每卡预留 40GB 显存（型号字符串以 jhosts attrib -l 查询为准）</span>
+jsub -q gpu_h800 -gpgpu <span class="s">"4 gmem=40000"</span> -n 32 ./train_gpu4.sh
+
+<span class="s"># 请求 1 个 MIG 切分实例（如 A100）</span>
+jsub -gpgpu <span class="s">"1 mig=7"</span> my_job</code></pre></div>
+      <div class="tbl-wrap"><table>
+        <tr><th>子参数</th><th>含义</th></tr>
+        <tr><td><code>num</code></td><td>GPU 卡数量（必须）</td></tr>
+        <tr><td><code>type</code></td><td>指定 GPU 型号，多个型号逗号分隔</td></tr>
+        <tr><td><code>vendor</code></td><td>指定厂商（如 nvidia）</td></tr>
+        <tr><td><code>gmem</code></td><td>每卡预留显存大小（MB）</td></tr>
+        <tr><td><code>sm</code></td><td>指定 SM（流处理器）数量</td></tr>
+        <tr><td><code>mig</code></td><td>MIG 实例规格（1/2/3/4/7）</td></tr>
+      </table></div>
+      <div class="hint warn"><b>多卡注意事项：</b>① 配额：用 <code>jlimits -n</code> 确认 GPU 配额，配额满则排队；② 节点卡数：用 <code>jhosts attrib -l &lt;节点名&gt;</code> 看 <code>ngpus</code> 字段；③ 4090/6000Ada 无 NVLink（走 PCIe），大模型训练优先 A800/H800；④ 跨节点多机多卡需用 <code>JH_HOSTS</code> 构造节点列表 + torchrun/NCCL，建议先小规模测试或咨询管理员。</div>
+    </section>
+
+    <!-- ============ 9 ============ -->
+    <section id="s9">
+      <div class="sec-head"><div class="sec-num">9</div><h2>MPI 并行作业</h2></div>
+
+      <div class="tbl-wrap"><table>
+        <tr><th>参数</th><th>说明</th></tr>
+        <tr><td><code>-n &lt;N&gt;</code></td><td>总进程数</td></tr>
+        <tr><td><code>-R "select[type==LINUX64] span[ptile=N]"</code></td><td>节点类型 + 每节点进程数（<b>必须指定节点类型</b>，否则可能分到 view 节点导致失败）</td></tr>
+        <tr><td><code>-m &lt;节点/节点组&gt;</code></td><td>指定节点或节点组</td></tr>
+      </table></div>
+      <p><b>节点数 = 总进程数 ÷ 每节点进程数</b>。例：<code>-n 16 -R "...span[ptile=4]"</code> → 4 节点 × 4 进程。</p>
+
+      <h3>从 JH_HOSTS 生成 hostfile</h3>
+      <p><code>JH_HOSTS</code> 格式：<code>节点名1 slot数1 节点名2 slot数2 ...</code>（1 slot = 1 CPU 核）。</p>
+      <div class="code-wrap"><div class="code-head"><span>Intel MPI / MPICH</span><button class="copy-btn">复制</button></div>
+      <pre><code>HOSTFILE=<span class="s">"hostfile_${JH_JOBID}"</span>
+echo <span class="s">"$JH_HOSTS"</span> | awk <span class="s">'{for(i=1;i<=NF;i+=2){host=$i;slots=$(i+1);for(j=1;j<=slots;j++) print host}}'</span> &gt; <span class="s">"$HOSTFILE"</span>
+
+NP=$(echo <span class="s">"$JH_HOSTS"</span> | awk <span class="s">'{s=0; for(i=2;i<=NF;i+=2) s+=$i; print s}'</span>)
+mpirun -n <span class="s">"$NP"</span> -machinefile <span class="s">"$HOSTFILE"</span> ./my_program input.dat</code></pre></div>
+      <div class="code-wrap"><div class="code-head"><span>OpenMPI</span><button class="copy-btn">复制</button></div>
+      <pre><code>HOSTFILE=<span class="s">"hostfile_${JH_JOBID}"</span>
+echo <span class="s">"$JH_HOSTS"</span> | awk <span class="s">'{for(i=1;i<=NF;i+=2) printf "%s slots=%s\n", $i, $(i+1)}'</span> &gt; <span class="s">"$HOSTFILE"</span>
+
+NP=$(echo <span class="s">"$JH_HOSTS"</span> | awk <span class="s">'{s=0; for(i=2;i<=NF;i+=2) s+=$i; print s}'</span>)
+mpirun -np <span class="s">"$NP"</span> --hostfile <span class="s">"$HOSTFILE"</span> -x PATH -x LD_LIBRARY_PATH --bind-to core ./my_program input.dat</code></pre></div>
+      <div class="hint warn"><b>⚠ OpenMPI：</b>默认不把当前环境变量传给 MPI 进程，必须用 <code>-x VAR</code> 显式传递（<code>-x</code> 后必须跟变量名）。<code>module load</code> 设置的 PATH/LD_LIBRARY_PATH 需通过 <code>-x</code> 传递。</div>
+
+      <h3>Intel MPI 完整脚本示例</h3>
+      <div class="code-wrap"><div class="code-head"><span>intel_mpi.sh</span><button class="copy-btn">复制</button></div>
+      <pre><code><span class="c">#!/bin/bash</span>
+<span class="k">#JSUB</span> -J intel_mpi_job
+<span class="k">#JSUB</span> -n 32
+<span class="k">#JSUB</span> -R <span class="s">"select[type==LINUX64] span[ptile=8]"</span>
+<span class="k">#JSUB</span> -o output.log
+<span class="k">#JSUB</span> -e error.log
+
+module purge
+module load intelmpi/2021.11
+
+export I_MPI_PIN=1
+export I_MPI_PIN_DOMAIN=auto
+
+HOSTFILE=<span class="s">"hostfile_${JH_JOBID}"</span>
+echo <span class="s">"$JH_HOSTS"</span> | awk <span class="s">'{for(i=1;i<=NF;i+=2){host=$i;slots=$(i+1);for(j=1;j<=slots;j++) print host}}'</span> &gt; <span class="s">"$HOSTFILE"</span>
+NP=$(echo <span class="s">"$JH_HOSTS"</span> | awk <span class="s">'{s=0; for(i=2;i<=NF;i+=2) s+=$i; print s}'</span>)
+
+mpirun -n <span class="s">"$NP"</span> -machinefile <span class="s">"$HOSTFILE"</span> ./my_program input.dat</code></pre></div>
+
+      <h3>三种 MPI 对比</h3>
+      <div class="tbl-wrap"><table>
+        <tr><th>特性</th><th>Intel MPI</th><th>MPICH</th><th>OpenMPI</th></tr>
+        <tr><td>启动命令</td><td>mpirun / mpiexec</td><td>mpiexec / mpirun</td><td>mpirun / mpiexec</td></tr>
+        <tr><td>hostfile 指定</td><td>-machinefile</td><td>-machinefile</td><td>--hostfile</td></tr>
+        <tr><td>默认绑定</td><td>I_MPI_PIN=1</td><td>手动配置</td><td>--bind-to core</td></tr>
+        <tr><td>适用场景</td><td>Intel 平台优化</td><td>通用、教学</td><td>异构环境</td></tr>
+      </table></div>
+    </section>
+
+    <!-- ============ 10 ============ -->
+    <section id="s10">
+      <div class="sec-head"><div class="sec-num">10</div><h2>大模型（LLM）使用介绍</h2></div>
+
+      <h3>平台已有大模型</h3>
+      <p>平台共享数据区已上传 <b>Deepseek、千问（Qwen）、微软等 33 个机构的 149 个大模型</b>。</p>
+      <ul style="margin-left:20px;font-size:14px">
+        <li>查看路径：<code>我的数据</code> → 共享数据区 → 公开共享组</li>
+        <li>目录：<code>${HOME}/.jhshares/PublicShareGroup/jhadmin_internal/JH_models/</code></li>
+      </ul>
+      <div class="grid" style="grid-template-columns:1fr 1fr">
+        <div class="card"><b>DeepSeek</b><p>DeepSeek-V4 / V3 / R1 / VL2 / coder（代码、通用、多模态）</p></div>
+        <div class="card"><b>Qwen 千问</b><p>Qwen3.x / Coder / Image（视觉多模态、文本生成、文生图）</p></div>
+        <div class="card"><b>智谱 GLM</b><p>GLM-5.x / 4.7（文本生成、逻辑推理、长文本）</p></div>
+        <div class="card"><b>Google Gemma3</b><p>27B / 12B / 4B / 1B（多模态文本+图像）</p></div>
+      </div>
+
+      <h3>模型发布（部署服务）</h3>
+      <p>门户主页 → <b>服务管理</b> → <b>新建服务</b>：</p>
+      <div class="tbl-wrap"><table>
+        <tr><th>参数</th><th>说明</th></tr>
+        <tr><td>服务类型</td><td>选择 <code>vLLM</code></td></tr>
+        <tr><td>资源规格 / 镜像</td><td>启动服务的资源配置与 vLLM 镜像版本</td></tr>
+        <tr><td>模型目录</td><td>Transformers 格式文本生成模型或量化模型</td></tr>
+        <tr><td>模型用途</td><td>文本生成 / 嵌入 / 重排序 / 多模态 / 其他</td></tr>
+        <tr><td>模型名称</td><td>API 中使用的模型名，空则默认用目录名（对应 --served-model-name）</td></tr>
+        <tr><td>并发量</td><td>--max-num-seqs，防止 OOM（显存不足）</td></tr>
+        <tr><td>max-model-len</td><td>最大上下文长度；显存/KV cache 不足时可缩小</td></tr>
+        <tr><td>gpu-memory-utilization</td><td>每张卡显存占比（0~1），空为 0.9</td></tr>
+        <tr><td>副本数 / 鉴权</td><td>服务副本数；开启 Bearer 令牌（API Key）后调用需带 Key</td></tr>
+      </table></div>
+      <p>部署完成后：点击服务名称查看状态与日志，点击<b>请求示例</b>获取 curl / python 调用示例。</p>
+
+      <h3>调用方式</h3>
+      <ul style="margin-left:20px;font-size:14px">
+        <li><b>授权</b>：服务管理 → 选中服务 → 更多操作 → 授权，允许特定用户访问</li>
+        <li><b>问答机器人</b>：门户 → 大模型应用 → 问答机器人 → 新建问答</li>
+        <li><b>第三方接口</b>：获取服务基础 URL 和 API Key，配置到 Chatbox、OpenCode 等客户端</li>
+        <li><b>视觉模型</b>：调用 Qwen2.5-VL-72B 理解图像生成文本</li>
+        <li><b>文生图</b>：服务类型选 SDWebUI + stable-diffusion，在 AI 绘图应用生成</li>
+      </ul>
+    </section>
+
+    <!-- ============ 11 ============ -->
+    <section id="s11">
+      <div class="sec-head"><div class="sec-num">11</div><h2>常见问题 FAQ</h2></div>
+      <div class="tbl-wrap"><table>
+        <tr><th style="width:220px">问题</th><th>原因 / 解决方法</th></tr>
+        <tr><td><b>提交失败，无作业号</b></td><td>作业命令或脚本参数有错误，修改错误参数</td></tr>
+        <tr><td><b>一直排队不计算</b></td><td>集群空闲 CPU/GPU 不足，或用户达配额上限。等资源释放，或取消作业、减少申请量；用 <code>jlimits</code> 确认配额</td></tr>
+        <tr><td><b>缺少系统库文件</b></td><td>缺 <code>lib*</code>：未设 <code>LD_LIBRARY_PATH</code> 或系统无该库（联系管理员）；缺/不兼容 <code>cudnn.x</code>：加载正确版本的 cuda 环境</td></tr>
+        <tr><td><b>脚本编码问题</b></td><td>Windows 编辑的脚本需转码：<code>dos2unix &lt;脚本名&gt;</code></td></tr>
+        <tr><td><b>作业运行失败（EXIT）</b></td><td>查看标准输出/错误输出分析。用 <code>-o output.log</code>（标准输出）、<code>-e error.log</code>（标准错误）</td></tr>
+        <tr><td><b>权限问题</b></td><td>日志提示 <code>Permission denied</code>：程序或其子程序无执行权限，用 <code>chmod +x &lt;app&gt;</code></td></tr>
+        <tr><td><b>Linux 桌面打不开</b></td><td>不要在 <code>.bashrc</code> 添加 conda 环境变量（破坏系统环境）。需 conda 时先开桌面再激活</td></tr>
+      </table></div>
+    </section>
+
+  </main>
+</div>
+
+<footer>
+  <p>用户交流 QQ 群：<b>81892673</b> · 联系方式以门户页面公布为准</p>
+  <p style="margin-top:8px;opacity:.7">本指南由培训课件《高性能计算（专用超算）中心平台培训》与景行调度文档整理，供快速上手参考。</p>
+</footer>
+
+<script>
+// 复制按钮
+document.querySelectorAll('.copy-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const pre=btn.closest('.code-wrap').querySelector('pre');
+    const text=pre.innerText;
+    navigator.clipboard.writeText(text).then(()=>{
+      btn.textContent='已复制 ✓'; btn.classList.add('ok');
+      setTimeout(()=>{btn.textContent='复制';btn.classList.remove('ok');},1500);
+    });
+  });
+});
+// 滚动高亮侧边导航
+const links=[...document.querySelectorAll('.side a')];
+const secs=links.map(a=>document.querySelector(a.getAttribute('href')));
+const obs=new IntersectionObserver(es=>{
+  es.forEach(e=>{
+    if(e.isIntersecting){
+      links.forEach(l=>l.classList.remove('active'));
+      const id='#'+e.target.id;
+      const link=links.find(l=>l.getAttribute('href')===id);
+      if(link)link.classList.add('active');
+    }
+  });
+},{rootMargin:'-20% 0px -70% 0px'});
+secs.forEach(s=>s&&obs.observe(s));
+</script>
+</body>
+</html>

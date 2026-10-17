@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+
+# PyInstaller 打包中间产物
+build/
+dist/
+
+# 历史版本备份
+backup/
+
+# 运行 / 自测产物
+*.log
+gpu_switch_selftest.txt
+
+# 旧版本 exe 副本（仓库只保留最新的 GPU切换助手.exe）
+GPU切换助手_v*.exe
+
+# 系统杂项
+Thumbs.db
+Desktop.ini

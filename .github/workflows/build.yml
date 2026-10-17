@@ -1,0 +1,39 @@
+name: Build Windows exe
+
+# 推送 / 打标签时自动自测并打包 GPU切换助手.exe
+on:
+  push:
+    branches: [main, master]
+    tags: ["v*"]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install PyInstaller
+        run: python -m pip install pyinstaller
+
+      - name: Run self-test
+        run: python gpu_switch_app.py --selftest
+
+      - name: Build executable
+        run: python -m PyInstaller --noconfirm --clean --distpath dist --workpath build "GPU切换助手.spec"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: GPU-switch-helper-windows
+          path: dist/GPU切换助手.exe
+
+      - name: Attach to release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/GPU切换助手.exe
